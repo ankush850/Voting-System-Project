@@ -1,0 +1,27 @@
+steps:
+- name: 'gcr.io/cloud-builders/curl'
+  args:
+  - '-L'
+  - 'https://firebase.tools/bin/linux/latest'
+  - '-o'
+  - '/workspace/firebase'
+- name: 'gcr.io/cloud-builders/curl'
+  args:
+  - '-L'
+  - "https://github.com/gohugoio/hugo/releases/download/v${_HUGO_VERSION}/hugo_extended_${_HUGO_VERSION}_Linux-64bit.tar.gz"
+  - '-o'
+  - '/workspace/hugo.tar.gz'
+  waitFor: ['-']
+- name: 'ubuntu:20.04'
+  args:
+  - 'bash'
+  - '-c'
+  - |
+    tar -xvf /workspace/hugo.tar.gz
+    chmod 755 /workspace/firebase
+    /workspace/hugo 
+    /workspace/firebase deploy --project qwiklabs-gcp-02-1e31530b2c0a --non-interactive --only hosting -m "Build ${BUILD_ID}"
+substitutions:
+  _HUGO_VERSION: 0.96.0
+options:
+  defaultLogsBucketBehavior: REGIONAL_USER_OWNED_BUCKET
