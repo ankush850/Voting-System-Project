@@ -1,0 +1,128 @@
+/* General styles */
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+    font-family: 'Poppins', sans-serif;
+}
+
+body {
+    background: linear-gradient(-45deg, #0f2027, #203a43, #2c5364, #1e3c72);
+    background-size: 400% 400%;
+    animation: gradientBG 15s ease infinite;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    height: 100vh;
+    color: white;
+    padding: 20px;
+}
+
+@keyframes gradientBG {
+    0% {background-position: 0% 50%;}
+    50% {background-position: 100% 50%;}
+    100% {background-position: 0% 50%;}
+}
+
+/* Container styles */
+.container {
+    background: rgba(255, 255, 255, 0.1);
+    border-radius: 16px;
+    padding: 40px;
+    width: 100%;
+    max-width: 500px;
+    text-align: center;
+    backdrop-filter: blur(10px);
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.2);
+    animation: fadeIn 1s ease forwards;
+}
+
+/* Animation for fade-in */
+@keyframes fadeIn {
+    from { opacity: 0; transform: translateY(-20px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+
+/* Title styles */
+h2 {
+    font-size: 28px;
+    margin-bottom: 20px;
+    font-weight: 600;
+    color: #fff;
+}
+
+/* Vote form styles */
+.vote-form {
+    display: flex;
+    flex-direction: column;
+    gap: 15px;
+}
+
+.vote-option {
+    display: flex;
+    align-items: center;
+    font-size: 18px;
+    padding: 12px;
+    background: rgba(255, 255, 255, 0.15);
+    border-radius: 8px;
+    cursor: pointer;
+    transition: background 0.3s ease;
+}
+
+.vote-option:hover {
+    background: rgba(255, 255, 255, 0.3);
+}
+
+.vote-option input {
+    margin-right: 10px;
+    accent-color: #00cec9;
+    transform: scale(1.2);
+}
+
+.custom-radio {
+    width: 20px;
+    height: 20px;
+    border: 2px solid #00cec9;
+    border-radius: 50%;
+    margin-right: 10px;
+    display: inline-block;
+}
+
+.vote-button {
+    padding: 15px 30px;
+    background-color: #00cec9;
+    border: none;
+    border-radius: 30px;
+    font-size: 18px;
+    font-weight: 600;
+    color: white;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    margin-top: 20px;
+}
+
+.vote-button:hover {
+    background-color: #0984e3;
+    transform: scale(1.05);
+}
+
+/* Responsive styles */
+@media (max-width: 768px) {
+    .container {
+        width: 100%;
+        padding: 30px;
+    }
+
+    h2 {
+        font-size: 24px;
+    }
+
+    .vote-option {
+        font-size: 16px;
+    }
+
+    .vote-button {
+        font-size: 16px;
+        padding: 12px 25px;
+    }
+}
