@@ -1,0 +1,38 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Voting Results</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/results.css') }}">
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600&display=swap" rel="stylesheet">
+</head>
+<body>
+    <div class="container">
+        <h2>📊 Voting Results</h2>
+
+        <div class="results-wrapper">
+            <ul class="results-list">
+                {% for name, count in results %}
+                    <li class="result-item">
+                        <strong>{{ name }}</strong>
+                        <span class="vote-count">{{ count }} votes</span>
+                    </li>
+                {% endfor %}
+            </ul>
+
+            <div class="chart-container">
+                <canvas id="resultsChart"></canvas>
+            </div>
+        </div>
+
+        <a href="/dashboard" class="btn-logout"> Go to Dashboard</a>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script>
+        const labels = {{ results | map(attribute=0) | list | tojson }};
+        const data = {{ results | map(attribute=1) | list | tojson }};
+    </script>
+    <script src="{{ url_for('static', filename='js/results.js') }}"></script>
+</body>
+</html>

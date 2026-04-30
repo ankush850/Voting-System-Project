@@ -1,0 +1,36 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Register - Online Voting System</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/register.css') }}">
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600&display=swap" rel="stylesheet">
+</head>
+<body>
+    <div class="container">
+        <h1>Online Voting System</h1>
+        <h2>Register</h2>
+
+        {% with messages = get_flashed_messages() %}
+            {% if messages %}
+                <p class="flash">{{ messages[0] }}</p>
+            {% endif %}
+        {% endwith %}
+
+        <!-- Webcam preview -->
+        <video id="video" width="320" height="240" autoplay></video>
+        <canvas id="canvas" width="320" height="240" style="display:none;"></canvas>
+
+        <form id="register-form" method="POST">
+            <input type="text" name="name" id="name" placeholder="Full Name" required>
+            <input type="text" name="username" id="username" placeholder="Voter ID" required>
+            <input type="hidden" name="image_data" id="image_data">
+            <button type="button" id="capture">Capture & Register</button>
+        </form>
+
+        <p>Already registered? <a href="/login">Login here</a></p>
+    </div>
+
+    <script src="{{ url_for('static', filename='js/register.js') }}"></script>
+</body>
+</html>
