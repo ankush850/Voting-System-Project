@@ -1,0 +1,16 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Vote Confirmation - Online Voting System</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/confirmation.css') }}">
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600&display=swap" rel="stylesheet">
+</head>
+<body>
+    <div class="container">
+        <h1>Vote Successfully Cast!</h1>
+        <p>You have already voted. Thank you for participating!</p>
+        <a href="{{ url_for('dashboard') }}">Go to Dashboard</a>
+    </div>
+</body>
+</html>

@@ -1,0 +1,26 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Cast Your Vote</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/vote.css') }}">
+</head>
+<body>
+    <div class="container">
+        <h2>🗳️ Cast Your Vote</h2>
+
+        <form method="POST" class="vote-form">
+            {% for id, name in candidates %}
+                <label class="vote-option">
+                    <input type="radio" name="candidate" value="{{ id }}" required>
+                    <span class="custom-radio"></span>
+                    {{ name }}
+                </label>
+            {% endfor %}
+
+            <button type="submit" class="vote-button">Submit Vote</button>
+        </form>
+    </div>
+<script src="{{ url_for('static', filename='js/vote.js') }}"></script>
+</body>
+</html>

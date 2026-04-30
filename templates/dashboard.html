@@ -1,0 +1,19 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Welcome - Online Voting System</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/dashboard.css') }}">
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600&display=swap" rel="stylesheet">
+</head>
+<body>
+    <div class="container">
+        <h1>Welcome to the Online Voting System</h1>
+        <div class="btn-group">
+            <a href="/login" class="btn" id="loginBtn"> Login</a>
+            <a href="/register" class="btn" id="registerBtn"> Register</a>
+            <a href="/results" class="btn results" id="resultsBtn"> View Results</a>
+        </div>
+    </div>
+</body>
+</html>
