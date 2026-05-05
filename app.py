@@ -9,9 +9,10 @@ from PIL import Image
 import dlib
 import mysql.connector
 from db_config import get_connection
+from werkzeug.security import generate_password_hash, check_password_hash
 
 app = Flask(__name__)
-app.secret_key = "supersecretkey"
+app.secret_key = os.environ.get('SECRET_KEY', os.urandom(24))
 
 # Load dlib's face detector and shape predictor
 detector = dlib.get_frontal_face_detector()
@@ -80,8 +81,9 @@ def register():
                 return redirect(url_for('register'))
 
         try:
+            hashed_password = generate_password_hash(password)
             cursor.execute("INSERT INTO users (name, username, password, face_encoding) VALUES (%s, %s, %s, %s)",
-                           (name, username, password, encoding.tobytes()))
+                           (name, username, hashed_password, encoding.tobytes()))
             conn.commit()
             flash("Registered successfully!")
             return redirect(url_for('login'))
@@ -98,9 +100,12 @@ def register():
 @app.route('/login', methods=['GET', 'POST'])
 def login():
     if request.method == 'POST':
-        image_data = request.form['image_data']
-        if not image_data:
-            flash("No image received.")
+        username = request.form.get('username')
+        password = request.form.get('password')
+        image_data = request.form.get('image_data')
+
+        if not username or not password or not image_data:
+            flash("All fields and face scan are required.")
             return redirect(url_for('login'))
 
         try:
@@ -109,12 +114,12 @@ def login():
             img = Image.open(BytesIO(image_bytes)).convert('RGB')
             frame = np.array(img)
         except:
-            flash("Invalid image.")
+            flash("Invalid image data.")
             return redirect(url_for('login'))
 
         faces = face_recognition.face_locations(frame)
         if len(faces) != 1:
-            flash("Only one face should be visible.")
+            flash("Only one face should be visible for verification.")
             return redirect(url_for('login'))
 
         if not detect_liveness(frame):
@@ -125,14 +130,23 @@ def login():
 
         conn = get_connection()
         cursor = conn.cursor()
-        cursor.execute("SELECT id, face_encoding FROM users")
-        for user_id, face_data in cursor.fetchall():
-            db_encoding = np.frombuffer(face_data, dtype=np.float64)
-            if face_recognition.compare_faces([db_encoding], encoding)[0]:
-                session['user_id'] = user_id
-                return redirect(url_for('vote'))
+        
+        # O(1) lookup: Get the user by username first
+        cursor.execute("SELECT id, password, face_encoding FROM users WHERE username = %s", (username,))
+        user = cursor.fetchone()
 
-        flash("Face not recognized.")
+        # Step 1: Verify Password
+        if user and check_password_hash(user[1], password):
+            db_encoding = np.frombuffer(user[2], dtype=np.float64)
+            # Step 2: Verify Biometrics (Face Match)
+            if face_recognition.compare_faces([db_encoding], encoding)[0]:
+                session['user_id'] = user[0]
+                return redirect(url_for('vote'))
+            else:
+                flash("Face verification failed.")
+        else:
+            flash("Invalid Voter ID or Password.")
+
         return redirect(url_for('login'))
 
     return render_template('login.html')
