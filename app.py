@@ -7,6 +7,7 @@ import base64
 from io import BytesIO
 from PIL import Image
 import dlib
+import mysql.connector
 from db_config import get_connection
 
 app = Flask(__name__)
@@ -160,10 +161,19 @@ def vote():
         cursor.execute("SELECT name FROM candidates WHERE id = %s", (candidate_id,))
         candidate_name = cursor.fetchone()[0]
 
-        cursor.execute("INSERT INTO votes (user_id, candidate_id) VALUES (%s, %s)", (user_id, candidate_id))
-        cursor.execute("UPDATE users SET has_voted = TRUE WHERE id = %s", (user_id,))
-        conn.commit()
-        session['voted_candidate'] = candidate_name
+        try:
+            cursor.execute("INSERT INTO votes (user_id, candidate_id) VALUES (%s, %s)", (user_id, candidate_id))
+            cursor.execute("UPDATE users SET has_voted = TRUE WHERE id = %s", (user_id,))
+            conn.commit()
+            session['voted_candidate'] = candidate_name
+        except mysql.connector.IntegrityError:
+            conn.rollback()
+            # This catches cases where the user tries to vote multiple times concurrently
+            pass
+        finally:
+            cursor.close()
+            conn.close()
+
         return redirect(url_for('vote_confirmation'))
 
     cursor.execute("SELECT id, name FROM candidates")

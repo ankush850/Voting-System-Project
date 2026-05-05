@@ -43,7 +43,7 @@ def setup_database():
         cursor.execute("""
             CREATE TABLE IF NOT EXISTS votes (
                 id INT AUTO_INCREMENT PRIMARY KEY,
-                user_id INT NOT NULL,
+                user_id INT NOT NULL UNIQUE,
                 candidate_id INT NOT NULL,
                 FOREIGN KEY (user_id) REFERENCES users(id),
                 FOREIGN KEY (candidate_id) REFERENCES candidates(id)
