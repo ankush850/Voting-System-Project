@@ -21,8 +21,10 @@
         <canvas id="canvas" width="320" height="240" style="display: none;"></canvas>
 
         <form id="login-form" method="POST">
+            <input type="text" name="username" id="username" placeholder="Voter ID" required>
+            <input type="password" name="password" id="password" placeholder="Password" required>
             <input type="hidden" name="image_data" id="image_data">
-            <button type="button" id="scan">Scan Face</button>
+            <button type="button" id="scan">Login & Verify Face</button>
         </form>
 
         <p>Don't have an account? <a href="/register">Register here</a></p>
