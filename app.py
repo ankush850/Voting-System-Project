@@ -73,14 +73,14 @@ def register():
 
         conn = get_connection()
         cursor = conn.cursor()
-        cursor.execute("SELECT face_encoding FROM users")
-        for (face_data,) in cursor.fetchall():
-            db_enc = np.frombuffer(face_data, dtype=np.float64)
-            if face_recognition.compare_faces([db_enc], encoding)[0]:
-                flash("Face already registered.")
-                return redirect(url_for('register'))
-
         try:
+            cursor.execute("SELECT face_encoding FROM users")
+            for (face_data,) in cursor.fetchall():
+                db_enc = np.frombuffer(face_data, dtype=np.float64)
+                if face_recognition.compare_faces([db_enc], encoding)[0]:
+                    flash("Face already registered.")
+                    return redirect(url_for('register'))
+
             hashed_password = generate_password_hash(password)
             cursor.execute("INSERT INTO users (name, username, password, face_encoding) VALUES (%s, %s, %s, %s)",
                            (name, username, hashed_password, encoding.tobytes()))
@@ -131,21 +131,25 @@ def login():
         conn = get_connection()
         cursor = conn.cursor()
         
-        # O(1) lookup: Get the user by username first
-        cursor.execute("SELECT id, password, face_encoding FROM users WHERE username = %s", (username,))
-        user = cursor.fetchone()
+        try:
+            # O(1) lookup: Get the user by username first
+            cursor.execute("SELECT id, password, face_encoding FROM users WHERE username = %s", (username,))
+            user = cursor.fetchone()
 
-        # Step 1: Verify Password
-        if user and check_password_hash(user[1], password):
-            db_encoding = np.frombuffer(user[2], dtype=np.float64)
-            # Step 2: Verify Biometrics (Face Match)
-            if face_recognition.compare_faces([db_encoding], encoding)[0]:
-                session['user_id'] = user[0]
-                return redirect(url_for('vote'))
+            # Step 1: Verify Password
+            if user and check_password_hash(user[1], password):
+                db_encoding = np.frombuffer(user[2], dtype=np.float64)
+                # Step 2: Verify Biometrics (Face Match)
+                if face_recognition.compare_faces([db_encoding], encoding)[0]:
+                    session['user_id'] = user[0]
+                    return redirect(url_for('vote'))
+                else:
+                    flash("Face verification failed.")
             else:
-                flash("Face verification failed.")
-        else:
-            flash("Invalid Voter ID or Password.")
+                flash("Invalid Voter ID or Password.")
+        finally:
+            cursor.close()
+            conn.close()
 
         return redirect(url_for('login'))
 
@@ -159,33 +163,34 @@ def vote():
 
     conn = get_connection()
     cursor = conn.cursor()
-    cursor.execute("SELECT has_voted FROM users WHERE id = %s", (user_id,))
-    if cursor.fetchone()[0]:
-        return redirect(url_for('vote_confirmation'))
+    try:
+        cursor.execute("SELECT has_voted FROM users WHERE id = %s", (user_id,))
+        if cursor.fetchone()[0]:
+            return redirect(url_for('vote_confirmation'))
 
-    if request.method == 'POST':
-        candidate_id = request.form['candidate']
-        cursor.execute("SELECT name FROM candidates WHERE id = %s", (candidate_id,))
-        candidate_name = cursor.fetchone()[0]
+        if request.method == 'POST':
+            candidate_id = request.form['candidate']
+            cursor.execute("SELECT name FROM candidates WHERE id = %s", (candidate_id,))
+            candidate_name = cursor.fetchone()[0]
 
-        try:
-            cursor.execute("INSERT INTO votes (user_id, candidate_id) VALUES (%s, %s)", (user_id, candidate_id))
-            cursor.execute("UPDATE users SET has_voted = TRUE WHERE id = %s", (user_id,))
-            conn.commit()
-            session['voted_candidate'] = candidate_name
-        except mysql.connector.IntegrityError:
-            conn.rollback()
-            # This catches cases where the user tries to vote multiple times concurrently
-            pass
-        finally:
-            cursor.close()
-            conn.close()
+            try:
+                cursor.execute("INSERT INTO votes (user_id, candidate_id) VALUES (%s, %s)", (user_id, candidate_id))
+                cursor.execute("UPDATE users SET has_voted = TRUE WHERE id = %s", (user_id,))
+                conn.commit()
+                session['voted_candidate'] = candidate_name
+            except mysql.connector.IntegrityError:
+                conn.rollback()
+                # This catches cases where the user tries to vote multiple times concurrently
+                pass
 
-        return redirect(url_for('vote_confirmation'))
+            return redirect(url_for('vote_confirmation'))
 
-    cursor.execute("SELECT id, name FROM candidates")
-    candidates = cursor.fetchall()
-    return render_template('vote.html', candidates=candidates)
+        cursor.execute("SELECT id, name FROM candidates")
+        candidates = cursor.fetchall()
+        return render_template('vote.html', candidates=candidates)
+    finally:
+        cursor.close()
+        conn.close()
 
 @app.route('/vote_confirmation')
 def vote_confirmation():
@@ -195,9 +200,13 @@ def vote_confirmation():
 def results():
     conn = get_connection()
     cursor = conn.cursor()
-    cursor.execute("SELECT c.name, COUNT(v.id) as vote_count FROM candidates c LEFT JOIN votes v ON c.id = v.candidate_id GROUP BY c.id")
-    results = cursor.fetchall()
-    return render_template("results.html", results=results)
+    try:
+        cursor.execute("SELECT c.name, COUNT(v.id) as vote_count FROM candidates c LEFT JOIN votes v ON c.id = v.candidate_id GROUP BY c.id")
+        results = cursor.fetchall()
+        return render_template("results.html", results=results)
+    finally:
+        cursor.close()
+        conn.close()
 
 @app.route('/logout')
 def logout():
